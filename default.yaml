@@ -1,0 +1,8 @@
+log:
+  # trace = -1; debug = 0; info = 1; warn = 2; error = 3; fatal = 4; panic = 5; no logging = 6; disabled = 7
+  level: 7
+dispatcher:
+  pool:
+    size: 2
+  pipe:
+    size: 2
