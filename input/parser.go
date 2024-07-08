@@ -69,7 +69,7 @@ func ParseTestCases(fileName string) ([]*TestCase, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("test case %d: failed to parse grid rows and columns", testCase.ID))
 		}
-		if testCase.GridRows < 1 || testCase.GridCols < 1 {
+		if testCase.GridRows < 1 || testCase.GridCols < 1 || testCase.GridRows > 30 || testCase.GridCols > 30 {
 			return nil, errors.New(fmt.Sprintf("test case %d: invalid grid size", testCase.ID))
 		}
 

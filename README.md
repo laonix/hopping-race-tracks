@@ -87,7 +87,6 @@ In the case of Hopping Race Tracks, the cost of straightforward and diagonal mov
 The `FCost` is the sum of `GCost` and `HCost`. It is the main basis for the priority queue to determine the next best square to explore. If the `FCost` is equal for two squares, the square with the lower `HCost` is chosen.
 
 The solution uses a pool of workers to process the test cases concurrently after reading the input file.
-_**Note**: the solution might be improved by passing each test case to processing workers as soon as it's read from the input file. For now, the solution would fail if any sort of inconsistency is found in the input file, so no test cases will be processed._
 
 ## Running the Solution
 
@@ -145,3 +144,22 @@ The `log.level` field is used to set the logging level.
 The `dispatcher.pool.size` field is used to set the number of workers in the pool.
 
 The `dispatcher.pipe.size` field is used to set the buffer size of test cases waiting to be processed.
+
+## Testing
+
+To run the tests, use the following command:
+
+```bash
+go test ./...
+```
+
+To run the tests with coverage, use the following command:
+
+```bash
+go test -cover ./...
+```
+
+## Possible Improvements
+
+1. The solution might be improved by passing each test case to processing workers as soon as it's read from the input file. For now, the solution would fail if any sort of inconsistency is found in the input file, so no test cases will be processed.
+2. The output might be improved by providing more detailed information about the hops the hopper made to reach the end position.
