@@ -71,6 +71,10 @@ type Grid struct {
 // NewGrid returns a new grid with the given number of rows and columns
 // and the specified obstacles.
 func NewGrid(rows, cols int, obstacles ...Obstacle) *Grid {
+	if rows <= 0 || cols <= 0 {
+		return nil
+	}
+
 	g := &Grid{
 		Cells: make(map[int]map[int]*Cell),
 		Rows:  rows,

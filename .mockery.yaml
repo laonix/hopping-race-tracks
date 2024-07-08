@@ -1,0 +1,18 @@
+filename: "mock_{{.InterfaceNameSnake}}_test.go"
+mockname: "Mock{{.InterfaceName}}"
+dir: "{{.InterfaceDirRelative}}"
+with-expecter: true
+inpackage: true
+
+packages:
+  github.com/laonix/hopping-race-tracks/dispatcher:
+    interfaces:
+      Worker:
+      Processor:
+  github.com/laonix/hopping-race-tracks/logger:
+    interfaces:
+      Logger:
+        configs:
+          - dir: dispatcher
+            inpackage: false
+            outpkg: "dispatcher"

@@ -5,12 +5,13 @@ import (
 	"sync"
 )
 
-// worker is an interface for a worker that processes tasks.
-type worker interface {
-	run(ctx context.Context)
+// Worker is an interface for a worker that processes tasks.
+type Worker interface {
+	Run(ctx context.Context)
 }
 
 // workerPool is a pool of workers that processes tasks concurrently.
+// Workers are synchronized using a WaitGroup and a context.
 type workerPool struct {
 	wg     sync.WaitGroup
 	ctx    context.Context
@@ -19,6 +20,10 @@ type workerPool struct {
 
 // newWorkerPool creates a new worker pool with the provided context.
 func newWorkerPool(ctx context.Context) *workerPool {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	p := &workerPool{}
 
 	p.ctx, p.cancel = context.WithCancel(ctx)
@@ -27,14 +32,14 @@ func newWorkerPool(ctx context.Context) *workerPool {
 }
 
 // startWorkers starts the provided workers in the pool.
-func (p *workerPool) startWorkers(workers ...worker) {
+func (p *workerPool) startWorkers(workers ...Worker) {
 	p.wg.Add(len(workers))
 
 	for _, w := range workers {
-		go func(ctx context.Context, w worker) {
+		go func(ctx context.Context, w Worker) {
 			defer p.wg.Done()
 
-			w.run(ctx)
+			w.Run(ctx)
 		}(p.ctx, w)
 	}
 }

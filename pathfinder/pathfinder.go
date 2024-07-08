@@ -6,20 +6,29 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Pathfinder is an interface for finding the shortest path between two cells.
+type Pathfinder interface {
+	FindPath(start, finish *Cell) ([]*Cell, error)
+}
+
 // Heuristic is a function that estimates the cost of moving from cell a to cell b.
 type Heuristic func(a, b *Cell) int
 
 // GridPathfinder finds the shortest path between to cells in a given grid.
 type GridPathfinder struct {
-	grid      *Grid
-	heuristic Heuristic
+	Grid      *Grid
+	Heuristic Heuristic
 }
 
 // NewGridPathfinder returns a new grid pathfinder with the given grid and heuristic function.
-func NewGridPathfinder(grid *Grid, h Heuristic) *GridPathfinder {
+func NewGridPathfinder(grid *Grid, h Heuristic) Pathfinder {
+	if grid == nil || h == nil {
+		return nil
+	}
+
 	return &GridPathfinder{
-		grid:      grid,
-		heuristic: h,
+		Grid:      grid,
+		Heuristic: h,
 	}
 }
 
@@ -32,13 +41,13 @@ func (pf *GridPathfinder) FindPath(start, finish *Cell) ([]*Cell, error) {
 	}
 
 	// get start point
-	s := pf.grid.GetCell(start.X, start.Y)
+	s := pf.Grid.GetCell(start.X, start.Y)
 	if s == nil {
 		return nil, errors.New("start cell is out of grid")
 	}
 
 	// get finish point
-	f := pf.grid.GetCell(finish.X, finish.Y)
+	f := pf.Grid.GetCell(finish.X, finish.Y)
 	if f == nil {
 		return nil, errors.New("finish cell is out of grid")
 	}
@@ -48,7 +57,7 @@ func (pf *GridPathfinder) FindPath(start, finish *Cell) ([]*Cell, error) {
 
 	// initialize the start cell
 	s.GCost = 0
-	s.HCost = pf.heuristic(s, f)
+	s.HCost = pf.Heuristic(s, f)
 	s.FCost = s.GCost + s.HCost
 	s.Speed = Velocity{X: 0, Y: 0}
 
@@ -75,7 +84,7 @@ func (pf *GridPathfinder) FindPath(start, finish *Cell) ([]*Cell, error) {
 		gCost := current.GCost + 1
 
 		// evaluate neighbors of the current cell and push them to the open cells priority queue
-		for _, neighbor := range pf.grid.GetNeighbors(current) {
+		for _, neighbor := range pf.Grid.GetNeighbors(current) {
 			// prepare the neighbor cell for re-evaluation
 			// if a new path to it is shorter than the previous one
 			if gCost <= neighbor.GCost {
@@ -89,7 +98,7 @@ func (pf *GridPathfinder) FindPath(start, finish *Cell) ([]*Cell, error) {
 			// evaluate not visited cell
 			if !neighbor.Open && !neighbor.Closed {
 				neighbor.GCost = gCost
-				neighbor.HCost = pf.heuristic(neighbor, f)
+				neighbor.HCost = pf.Heuristic(neighbor, f)
 				neighbor.FCost = neighbor.GCost + neighbor.HCost
 				neighbor.Speed = Velocity{X: neighbor.X - current.X, Y: neighbor.Y - current.Y}
 				neighbor.Parent = current

@@ -9,19 +9,39 @@ import (
 	"github.com/laonix/hopping-race-tracks/pathfinder"
 )
 
-// processTestCase processes a single test case and returns the result.
+// gridProcessor is an implementation of the Processor interface for the dispatcher.
+type gridProcessor struct{}
+
+// NewGridProcessor creates a new processor for the dispatcher.
+func NewGridProcessor() Processor {
+	return &gridProcessor{}
+}
+
+// GetGrid returns a new pathfinder grid initialized with the provided rows, columns, and obstacles.
+func (p *gridProcessor) GetGrid(rows, cols int, obstacles ...pathfinder.Obstacle) *pathfinder.Grid {
+	return pathfinder.NewGrid(rows, cols, obstacles...)
+}
+
+// GetPathfinder returns a new pathfinder initialized with the provided grid and heuristic function.
+func (p *gridProcessor) GetPathfinder(g *pathfinder.Grid, distance pathfinder.Heuristic) pathfinder.Pathfinder {
+	return pathfinder.NewGridPathfinder(g, distance)
+}
+
+// Process processes a single test case and returns the result.
 //
 // It initializes a new pathfinder with the grid and obstacles from the test case,
 // finds the path from the start to the end cell, and returns the string representation of the result.
-//
-// processTestCase is of processor function type.
-func processTestCase(in *input.TestCase) (string, error) {
+func (p *gridProcessor) Process(in *input.TestCase) (string, error) {
 	if in == nil {
 		return "", errors.New("test case must be provided")
 	}
 
-	g := pathfinder.NewGrid(in.GridRows, in.GridCols, getObstacles(in.Obstacles)...)
-	pf := pathfinder.NewGridPathfinder(g, pathfinder.ChebyshevDistance)
+	g := p.GetGrid(in.GridRows, in.GridCols, getObstacles(in.Obstacles)...)
+	if g == nil {
+		return "", errors.New("failed to create grid")
+	}
+
+	pf := p.GetPathfinder(g, pathfinder.ChebyshevDistance)
 
 	path, err := pf.FindPath(getCell(in.Start.X, in.Start.Y), getCell(in.End.X, in.End.Y))
 	if err != nil {

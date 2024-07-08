@@ -51,7 +51,7 @@ func ParseTestCases(fileName string) ([]*TestCase, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse cases count")
 	}
-	if casesCount == 0 {
+	if casesCount < 1 {
 		return nil, errors.New("no test cases provided")
 	}
 
@@ -65,9 +65,12 @@ func ParseTestCases(fileName string) ([]*TestCase, error) {
 		testCaseIdx++
 
 		// grid rows and columns
-		_, err := fmt.Sscanf(lines[i], "%d %d", &testCase.GridRows, &testCase.GridCols)
+		_, err := fmt.Sscanf(lines[i], "%d %d", &testCase.GridCols, &testCase.GridRows)
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("test case %d: failed to parse grid rows and columns", testCase.ID))
+		}
+		if testCase.GridRows < 1 || testCase.GridCols < 1 {
+			return nil, errors.New(fmt.Sprintf("test case %d: invalid grid size", testCase.ID))
 		}
 
 		// start and end coordinates
@@ -76,12 +79,23 @@ func ParseTestCases(fileName string) ([]*TestCase, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("test case %d: failed to parse start and end coordinates", testCase.ID))
 		}
+		if testCase.Start.X < 0 || testCase.Start.Y < 0 ||
+			testCase.Start.X >= testCase.GridCols || testCase.Start.Y >= testCase.GridRows {
+			return nil, errors.New(fmt.Sprintf("test case %d: invalid start coordinates", testCase.ID))
+		}
+		if testCase.End.X < 0 || testCase.End.Y < 0 ||
+			testCase.End.X >= testCase.GridCols || testCase.End.Y >= testCase.GridRows {
+			return nil, errors.New(fmt.Sprintf("test case %d: invalid end coordinates", testCase.ID))
+		}
 
 		// obstacles
 		i++
 		obstaclesCount, err := strconv.Atoi(lines[i])
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("test case %d: failed to parse obstacles count", testCase.ID))
+		}
+		if obstaclesCount < 0 {
+			return nil, errors.New(fmt.Sprintf("test case %d: invalid obstacles count", testCase.ID))
 		}
 
 		for j := 0; j < obstaclesCount; j++ {
@@ -90,6 +104,13 @@ func ParseTestCases(fileName string) ([]*TestCase, error) {
 			_, err := fmt.Sscanf(lines[i], "%d %d %d %d", &o.X1, &o.X2, &o.Y1, &o.Y2)
 			if err != nil {
 				return nil, errors.Wrap(err, fmt.Sprintf("test case %d: failed to parse obstacle %d", testCase.ID, j+1))
+			}
+			if o.X1 < 0 || o.X1 >= testCase.GridCols ||
+				o.X2 < 0 || o.X2 >= testCase.GridCols ||
+				o.Y1 < 0 || o.Y1 >= testCase.GridRows ||
+				o.Y2 < 0 || o.Y2 >= testCase.GridRows ||
+				o.X1 > o.X2 || o.Y1 > o.Y2 {
+				return nil, errors.New(fmt.Sprintf("test case %d: invalid obstacle %d", testCase.ID, j+1))
 			}
 			testCase.Obstacles = append(testCase.Obstacles, o)
 		}

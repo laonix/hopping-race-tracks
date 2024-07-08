@@ -48,16 +48,27 @@ func NewTestCaseDispatcher(ctx context.Context, opts ...TestCaseDispatcherOption
 // Channels are created right after the pipe size is set.
 func WithDispatcherPipeSize(pipeSize int) TestCaseDispatcherOption {
 	return func(d *TestCaseDispatcher) {
-		d.pipeSize = pipeSize
-		d.in = make(chan *input.TestCase, d.pipeSize)
-		d.out = make(chan string, d.pipeSize)
+		if pipeSize > 0 {
+			d.pipeSize = pipeSize
+		} else {
+			d.pipeSize = 0
+		}
+
+		if d.pipeSize > 0 {
+			d.in = make(chan *input.TestCase, d.pipeSize)
+			d.out = make(chan string, d.pipeSize)
+		}
 	}
 }
 
 // WithDispatcherPoolSize sets the number of workers in the pool.
 func WithDispatcherPoolSize(poolSize int) TestCaseDispatcherOption {
 	return func(d *TestCaseDispatcher) {
-		d.poolSize = poolSize
+		if poolSize > 0 {
+			d.poolSize = poolSize
+		} else {
+			d.poolSize = 0
+		}
 	}
 }
 
@@ -96,10 +107,10 @@ func (d *TestCaseDispatcher) startHandlers(ctx context.Context) {
 	d.pool = startPool(
 		ctx,
 		d.poolSize,
-		withTestCaseHandlerIn(d.in),
-		withTestCaseHandlerOut(d.out),
-		withTestCaseHandlerProcessor(processTestCase),
-		withTestCaseHandlerLogger(d.log),
+		withHandlerIn(d.in),
+		withHandlerOut(d.out),
+		withHandlerProcessor(NewGridProcessor()),
+		withHandlerLogger(d.log),
 	)
 }
 
@@ -107,9 +118,13 @@ func (d *TestCaseDispatcher) startHandlers(ctx context.Context) {
 //
 // The workers are created with the provided options and added to the pool.
 func startPool(ctx context.Context, count int, opts ...testCaseHandlerOption) *workerPool {
+	if count <= 0 {
+		return nil
+	}
+
 	pool := newWorkerPool(ctx)
 
-	var handlers []worker
+	var handlers []Worker
 	for i := 0; i < count; i++ {
 		handlers = append(handlers, newTestCaseHandler(opts...))
 	}

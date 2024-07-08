@@ -18,17 +18,18 @@ func (pq *priorityQueue) Len() int {
 // Less reports whether the Cell under index i
 // is less than the Cell under index j.
 // The comparison is based on FCost of the cells
-// (in case of equality, comparison continues with HCost and finally with GCost).
+// (in case of equality, comparison continues with HCost).
 func (pq *priorityQueue) Less(i, j int) bool {
-	if (*pq)[i].cell == nil || (*pq)[j].cell == nil {
+	if i < 0 || j < 0 || i >= len(*pq) || j >= len(*pq) {
+		return false
+	}
+
+	if (*pq)[i] == nil || (*pq)[j] == nil ||
+		(*pq)[i].cell == nil || (*pq)[j].cell == nil {
 		return false
 	}
 
 	if (*pq)[i].cell.FCost == (*pq)[j].cell.FCost {
-		if (*pq)[i].cell.HCost == (*pq)[j].cell.HCost {
-			return (*pq)[i].cell.GCost < (*pq)[j].cell.GCost
-		}
-
 		return (*pq)[i].cell.HCost < (*pq)[j].cell.HCost
 	}
 
@@ -37,22 +38,40 @@ func (pq *priorityQueue) Less(i, j int) bool {
 
 // Swap swaps the elements under indexes i and j.
 func (pq *priorityQueue) Swap(i, j int) {
+	if i < 0 || j < 0 || i >= len(*pq) || j >= len(*pq) {
+		return
+	}
+
 	(*pq)[i], (*pq)[j] = (*pq)[j], (*pq)[i]
-	(*pq)[i].index = i
-	(*pq)[j].index = j
+	if (*pq)[i] != nil {
+		(*pq)[i].index = i
+	}
+	if (*pq)[j] != nil {
+		(*pq)[j].index = j
+	}
 }
 
 // Push adds a new element to the queue.
 func (pq *priorityQueue) Push(x interface{}) {
 	n := len(*pq)
-	cell := x.(*Cell)
+
+	cell, ok := x.(*Cell)
+	if !ok {
+		return
+	}
+
 	entry := &queueEntry{cell: cell}
 	entry.index = n
+
 	*pq = append(*pq, entry)
 }
 
 // Pop removes the element with the highest priority from the queue.
 func (pq *priorityQueue) Pop() interface{} {
+	if len(*pq) == 0 {
+		return nil
+	}
+
 	old := *pq
 	n := len(old)
 	entry := old[n-1]
@@ -65,9 +84,9 @@ func (pq *priorityQueue) Pop() interface{} {
 //
 // If the cell is not found, -1 is returned.
 func (pq *priorityQueue) GetIndex(cell *Cell) int {
-	for i, entry := range *pq {
+	for _, entry := range *pq {
 		if entry.cell == cell {
-			return i
+			return entry.index
 		}
 	}
 
