@@ -85,3 +85,63 @@ The `HCost` is the `Diagonal distance` from the current square to the end positi
 In the case of Hopping Race Tracks, the cost of straightforward and diagonal movements are equal, so we can utilize `Chebyshev Distance` formula for calculating `HCost`.
 
 The `FCost` is the sum of `GCost` and `HCost`. It is the main basis for the priority queue to determine the next best square to explore. If the `FCost` is equal for two squares, the square with the lower `HCost` is chosen.
+
+The solution uses a pool of workers to process the test cases concurrently after reading the input file.
+_**Note**: the solution might be improved by passing each test case to processing workers as soon as it's read from the input file. For now, the solution would fail if any sort of inconsistency is found in the input file, so no test cases will be processed._
+
+## Running the Solution
+
+To run the solution, you need to have [Golang (version >=1.22)](https://go.dev/doc/install) installed on your machine.
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/laonix/hopping-race-tracks
+```
+
+2. Navigate to the solution directory:
+
+```bash
+cd hopping-race-tracks
+```
+
+3. Run the solution:
+
+```bash
+go run main.go
+```
+
+To provide a custom input file, use the `-file` flag with the path to the file as an argument:
+
+```bash
+go run main.go -file=./example_input.txt
+```
+
+To provide a custom configuration, use the `-config` flag with the path to the file as an argument:
+
+```bash
+go run main.go -config=./example_config.yaml
+```
+
+### Configuration
+
+Below is an example of the configuration file:
+
+```yaml
+log:
+  # trace = -1; debug = 0; info = 1; warn = 2; error = 3; fatal = 4; panic = 5; no logging = 6; disabled = 7
+  level: 3
+dispatcher:
+  pool:
+    size: 2
+  pipe:
+    size: 2
+```
+
+The configuration file is optional. If not provided, the solution will use the default values.
+
+The `log.level` field is used to set the logging level.
+
+The `dispatcher.pool.size` field is used to set the number of workers in the pool.
+
+The `dispatcher.pipe.size` field is used to set the buffer size of test cases waiting to be processed.
